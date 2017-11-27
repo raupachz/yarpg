@@ -9,6 +9,8 @@ import java.io.Serializable;
  */
 public class Coordinate implements Serializable {
     
+    public static final Coordinate ORIGIN = Coordinate.of(0, 0);
+    
     private final int x;
     private final int y;
 
@@ -37,6 +39,10 @@ public class Coordinate implements Serializable {
     
     public Coordinate withY(int y) {
         return new Coordinate(this.x, y);
+    }
+    
+    public static Coordinate of(int x, int y) {
+        return new Coordinate(x, y);
     }
     
     @Override

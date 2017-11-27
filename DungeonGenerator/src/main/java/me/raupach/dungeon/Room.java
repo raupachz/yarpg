@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.Objects;
 
 /**
- * A room is basically a rectangle with four right angles at four coordinates.
+ * A room is a rectangle with four right angles at four coordinates.
  */
 public class Room implements Serializable {
     
@@ -14,11 +14,16 @@ public class Room implements Serializable {
     private final Coordinate bottomRight;
     
     public Room(int width, int height) {
-        this(new Coordinate(0, 0), width, height);
+        this(Coordinate.ORIGIN, width, height);
     }
     
     public Room(Coordinate coordinate, int width, int height) {
-        
+        this(
+            coordinate, 
+            coordinate.withX(coordinate.getX() + width), 
+            coordinate.withY(coordinate.getY() + height), 
+            coordinate.withX(coordinate.getX() + width).withY(coordinate.getY() + height)
+        );
     }
 
     public Room(Coordinate topLeft, Coordinate topRight, Coordinate bottomLeft, Coordinate bottomRight) {

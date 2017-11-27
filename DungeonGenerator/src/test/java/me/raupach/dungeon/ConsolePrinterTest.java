@@ -12,7 +12,7 @@ public class ConsolePrinterTest {
         //cp.add(d1);
         
         
-        Room r2 = new Room(10, 1);
+        Room r2 = new Room(11, 3);
         
         cp.add(r2);
         cp.print();
