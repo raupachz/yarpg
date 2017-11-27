@@ -34,8 +34,13 @@ public class CampaignService implements Serializable {
         return campaign;
     }
 
-    public Campaign createCampaign(Campaign c) {
+    public Campaign saveCampaign(Campaign c) {
         return em.merge(c);
+    }
+
+    public void deleteCampaign(long id) {
+        Object ref = em.getReference(Campaign.class, id);
+        em.remove(ref);
     }
 
     public List<HeroSelection> getCurrentSelectionsByCampaignId(long campaignId) {
@@ -68,8 +73,9 @@ public class CampaignService implements Serializable {
         List<HeroSelection> savedSelections = getCurrentSelectionsByCampaignId(selection.getCampaign().getId());
 
         for (HeroSelection tmpSelection : savedSelections) {
-            if (selection.getSelectedHero().equals(tmpSelection.getSelectedHero())
-                    && selection.getCampaign().equals(tmpSelection.getCampaign())) {
+            if (selection.getCampaign().equals(tmpSelection.getCampaign())
+                    && selection.getSelectedHero().equals(tmpSelection.getSelectedHero())
+                    && !selection.getPlayer().equals(tmpSelection.getPlayer())) {
                 throw new HeroSelectionException("Hero " + selection.getSelectedHero().getName() + " already selected");
             }
         }

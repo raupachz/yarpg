@@ -3,6 +3,7 @@ package de.pho.descent.web.campaign;
 import de.pho.descent.shared.auth.ParamValue;
 import de.pho.descent.shared.dto.WsCampaign;
 import de.pho.descent.shared.model.Player;
+import de.pho.descent.shared.model.campaign.Campaign;
 import de.pho.descent.web.auth.UserValidationException;
 import de.pho.descent.web.exception.NotFoundException;
 import de.pho.descent.web.player.PlayerController;
@@ -11,8 +12,8 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -38,10 +39,10 @@ public class CampaignBoundary {
 
     private static final Logger LOG = Logger.getLogger(CampaignBoundary.class.getName());
 
-    @EJB
+    @Inject
     private CampaignController campaignController;
 
-    @EJB
+    @Inject
     private PlayerController playerController;
 
     @GET
@@ -60,29 +61,47 @@ public class CampaignBoundary {
     }
 
     @POST
-    public Response createNewCampaign(
+    public Response createCampaign(
+            @HeaderParam(ParamValue.AUTHORIZATION_HEADER_KEY) String authToken,
+            @Context UriInfo uriInfo,
+            WsCampaign wsCampaign)
+            throws URISyntaxException, UserValidationException {
+        Player player = playerController.getPlayerByToken(authToken);
+        LOG.log(Level.INFO, "Calling createNewCampaign with Player {0}", player.getUsername());
+
+        Campaign campaign = campaignController.createCampaign(wsCampaign);
+        URI uri = uriInfo.getAbsolutePathBuilder().path(String.valueOf(campaign.getId())).build();
+
+        return Response.created(uri).entity(WsCampaign.createInstance(campaign)).build();
+    }
+
+    @POST
+    @Path("/new")
+    public Response newCampaign(
             @HeaderParam(ParamValue.AUTHORIZATION_HEADER_KEY) String authToken,
             @Context UriInfo uriInfo)
             throws URISyntaxException, UserValidationException {
         Player player = playerController.getPlayerByToken(authToken);
         LOG.log(Level.INFO, "Calling createNewCampaign with Player {0}", player.getUsername());
 
-        WsCampaign wscampaign = WsCampaign.createInstance(campaignController.createNewCampaign(player));
-        URI uri = uriInfo.getAbsolutePathBuilder().path(String.valueOf(wscampaign.getId())).build();
+        Campaign campaign = campaignController.newCampaign(player);
+        URI uri = uriInfo.getAbsolutePathBuilder().path(String.valueOf(campaign.getId())).build();
 
-        return Response.created(uri).entity(wscampaign).build();
+        return Response.created(uri).entity(WsCampaign.createInstance(campaign)).build();
     }
 
-    @POST
-    @Path("/{" + ParamValue.CAMPAIGN_ID + "}")
+    @GET
+    @Path("/{" + ParamValue.CAMPAIGN_ID + "}/start")
     public Response startCampaign(
             @HeaderParam(ParamValue.AUTHORIZATION_HEADER_KEY) String authToken,
             @PathParam(ParamValue.CAMPAIGN_ID) String campaignId)
             throws UserValidationException, HeroSelectionException, NotFoundException {
         Player overlordPlayer = playerController.getPlayerByToken(authToken);
-        campaignController.startCampaign(overlordPlayer, campaignId);
+        LOG.log(Level.INFO, "Calling startCampaign with Player {0}", overlordPlayer.getUsername());
 
-        return Response.ok().build();
+        Campaign campaign = campaignController.startCampaign(overlordPlayer, campaignId);
+
+        return Response.ok().entity(WsCampaign.createInstance(campaign)).build();
     }
 
 }
